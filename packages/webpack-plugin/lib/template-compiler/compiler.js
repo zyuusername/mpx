@@ -456,7 +456,7 @@ function parseComponent (content, options) {
           var name = ref.name
           var value = ref.value
 
-          cumulated[name] = value || true
+          cumulated[name] = value
           return cumulated
         }, {})
       }
@@ -1183,9 +1183,68 @@ function genNode (node) {
   return exp
 }
 
+function transpileComponent (sfc, options) {
+  return sfc
+}
+
+function serializeComponent (sfc) {
+  function _serialize (blockInfo) {
+    let result = ''
+    result += '<' + blockInfo.tag
+    if (blockInfo.attrs) {
+      Object.keys(blockInfo.attrs).forEach(key => {
+        let value = blockInfo.attrs[key]
+        result += ' ' + key
+        if (value != null && value !== '') {
+          result += '=' + JSON.stringify(value)
+        }
+      })
+    }
+    result += '>'
+    result += blockInfo.content
+    result += '</' + blockInfo.tag + '>'
+
+    return result
+  }
+
+  function walk (sfc) {
+    let result = ''
+    Object.keys(sfc).forEach(key => {
+      let block = sfc[key]
+      if (!block) return
+      if (Array.isArray(block)) {
+        result += block.map(childBlock => walkBlock(childBlock)).join('\n')
+      } else {
+        result += walkBlock(block)
+      }
+      result += '\n'
+    })
+    return result
+  }
+
+  function walkBlock (block) {
+    let tag
+    // json
+    if (block.type === 'script' || block.type === 'javascript/json') {
+      tag = 'script'
+    } else {
+      tag = block.type
+    }
+    return _serialize({
+      tag,
+      content: block.content,
+      attrs: block.attrs
+    })
+  }
+
+  return walk(sfc)
+}
+
 module.exports = {
   parseComponent,
   parse,
+  transpileComponent,
+  serializeComponent,
   serialize,
   genNode
 }

@@ -6,11 +6,13 @@ const SourceMapGenerator = require('source-map').SourceMapGenerator
 const splitRE = /\r?\n/g
 const emptyRE = /^(?:\/\/)?\s*$/
 
-module.exports = (content, filename, needMap) => {
+module.exports = (content, filename, options = {}) => {
   const cacheKey = hash(filename + content)
+  let needMap = !!options.needMap
+  delete options.needMap
   let output = cache.get(cacheKey)
   if (output) return output
-  output = compiler.parseComponent(content, { pad: 'line' })
+  output = compiler.parseComponent(content, Object.assign({}, options, { pad: 'line' }))
   if (needMap) {
     // source-map cache busting for hot-reloadded modules
     const filenameWithHash = filename + '?' + cacheKey

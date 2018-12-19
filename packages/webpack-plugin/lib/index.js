@@ -17,6 +17,9 @@ class MpxWebpackPlugin {
   }
 
   static loader (options) {
+    if (options && options.mode === 'vue') {
+      return { loader: normalize.lib('platform-loader'), options }
+    }
     return { loader: normalize.lib('loader'), options }
   }
 
@@ -29,6 +32,10 @@ class MpxWebpackPlugin {
   }
 
   apply (compiler) {
+    if (this.options && this.options.mode === 'vue') {
+      return
+    }
+
     // 强制设置publicPath为'/'
     compiler.options.output.publicPath = '/'
 
